@@ -85,17 +85,12 @@
     flex: 1;
     position: relative;
     overflow: hidden;
-    background:
-      repeating-linear-gradient(
-        90deg,
-        #1a120b 0px, #1a120b 48px,
-        #231a10 48px, #231a10 50px
-      );
+    background: url('Screenshot-court.png') center center / cover no-repeat;
   }
   .stage::before {
     content: '';
     position: absolute; inset: 0;
-    background: linear-gradient(180deg, rgba(10,10,15,.6) 0%, transparent 30%, transparent 65%, rgba(10,10,15,.7) 100%);
+    background: linear-gradient(180deg, rgba(10,10,15,.3) 0%, transparent 30%, transparent 65%, rgba(10,10,15,.7) 100%);
     pointer-events: none;
     z-index: 1;
   }
