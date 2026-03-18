@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stock Defender</title>
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0f;
+    --card: #1a1a2e;
+    --red: #c0392b;
+    --blue: #2980b9;
+    --gold: #f39c12;
+    --green: #27ae60;
+    --text: #e0e0e0;
+    --muted: #888;
+  }
+
+  body {
+    font-family: 'Special Elite', cursive;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Header ── */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    flex-wrap: wrap;
+    padding: 28px 20px 18px;
+    background: linear-gradient(180deg, #12121f 0%, var(--bg) 100%);
+    border-bottom: 2px solid #222;
+  }
+  .logo {
+    font-size: 2rem;
+    letter-spacing: 3px;
+    color: var(--gold);
+    text-shadow: 0 0 18px rgba(243,156,18,.35);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .logo span { font-size: 1.6rem; }
+  .input-group {
+    display: flex;
+    gap: 10px;
+  }
+  #tickerInput {
+    font-family: 'Special Elite', cursive;
+    font-size: 1.15rem;
+    padding: 10px 18px;
+    border: 2px solid #333;
+    border-radius: 8px;
+    background: #111;
+    color: var(--gold);
+    text-transform: uppercase;
+    width: 160px;
+    outline: none;
+    transition: border-color .2s;
+  }
+  #tickerInput:focus { border-color: var(--gold); }
+  #tickerInput::placeholder { color: #555; text-transform: none; }
+
+  .btn {
+    font-family: 'Special Elite', cursive;
+    font-size: 1.05rem;
+    padding: 10px 24px;
+    border: 2px solid var(--gold);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--gold);
+    cursor: pointer;
+    transition: all .2s;
+    white-space: nowrap;
+  }
+  .btn:hover { background: var(--gold); color: #111; }
+
+  /* ── Courtroom ── */
+  .courtroom {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 30px 20px 60px;
+    display: none;
+  }
+  .courtroom.visible { display: block; }
+
+  .courtroom-floor {
+    background:
+      repeating-linear-gradient(
+        90deg,
+        #1a120b 0px, #1a120b 48px,
+        #231a10 48px, #231a10 50px
+      );
+    border-radius: 18px;
+    padding: 36px 24px 42px;
+    border: 2px solid #2a2016;
+    position: relative;
+    overflow: hidden;
+  }
+  .courtroom-floor::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(10,10,15,.55) 0%, transparent 40%, transparent 70%, rgba(10,10,15,.6) 100%);
+    pointer-events: none;
+  }
+
+  .sides {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── Character panels ── */
+  .panel {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  .panel.show {
+    animation: panelIn .6s ease forwards;
+  }
+  @keyframes panelIn {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .character {
+    text-align: center;
+    margin-bottom: 14px;
+  }
+  .avatar {
+    font-size: 3.5rem;
+    line-height: 1;
+    margin-bottom: 4px;
+    filter: drop-shadow(0 0 12px rgba(255,255,255,.12));
+  }
+  .role {
+    font-size: 1.15rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .prosecutor .role { color: var(--red); }
+  .defense .role    { color: var(--blue); }
+
+  .speech-bubble {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 22px 20px;
+    position: relative;
+  }
+  .prosecutor .speech-bubble { border-left: 4px solid var(--red); }
+  .defense .speech-bubble    { border-left: 4px solid var(--blue); }
+
+  .speech-bubble ul {
+    list-style: none;
+    padding: 0;
+  }
+  .speech-bubble li {
+    padding: 9px 0;
+    border-bottom: 1px solid #262640;
+    font-size: .98rem;
+    line-height: 1.45;
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+  .speech-bubble li:last-child { border-bottom: none; }
+  .speech-bubble li.show {
+    animation: bulletIn .4s ease forwards;
+  }
+  @keyframes bulletIn {
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .prosecutor li::before { content: '⚠️ '; }
+  .defense li::before    { content: '✅ '; }
+
+  /* ── Verdict ── */
+  .verdict-wrap {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    justify-content: center;
+    margin-top: 34px;
+  }
+  .verdict-card {
+    background: var(--card);
+    border: 3px solid var(--gold);
+    border-radius: 18px;
+    padding: 32px 44px;
+    text-align: center;
+    max-width: 520px;
+    width: 100%;
+    opacity: 0;
+    transform: scale(.8);
+    box-shadow: 0 0 40px rgba(243,156,18,.12);
+  }
+  .verdict-card.show {
+    animation: gavelBang .55s cubic-bezier(.17,.67,.32,1.3) forwards;
+  }
+  @keyframes gavelBang {
+    0%   { opacity: 0; transform: scale(.8); }
+    65%  { opacity: 1; transform: scale(1.1); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+
+  .verdict-label {
+    font-size: .9rem;
+    color: var(--muted);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .verdict-text {
+    font-size: 2.8rem;
+    letter-spacing: 6px;
+    font-weight: bold;
+    margin-bottom: 6px;
+  }
+  .verdict-card.buy  .verdict-text { color: var(--green); text-shadow: 0 0 28px rgba(39,174,96,.5); }
+  .verdict-card.hold .verdict-text { color: var(--gold);  text-shadow: 0 0 28px rgba(243,156,18,.5); }
+  .verdict-card.avoid .verdict-text{ color: var(--red);   text-shadow: 0 0 28px rgba(192,57,43,.5); }
+
+  .verdict-card.buy  { box-shadow: 0 0 50px rgba(39,174,96,.18); }
+  .verdict-card.hold { box-shadow: 0 0 50px rgba(243,156,18,.18); }
+  .verdict-card.avoid{ box-shadow: 0 0 50px rgba(192,57,43,.18); }
+
+  .risk-badge {
+    display: inline-block;
+    padding: 4px 16px;
+    border-radius: 20px;
+    font-size: .85rem;
+    letter-spacing: 2px;
+    margin-bottom: 14px;
+  }
+  .risk-low    { background: rgba(39,174,96,.18); color: var(--green); border: 1px solid var(--green); }
+  .risk-medium { background: rgba(243,156,18,.18); color: var(--gold); border: 1px solid var(--gold); }
+  .risk-high   { background: rgba(192,57,43,.18); color: var(--red); border: 1px solid var(--red); }
+
+  .summary {
+    font-size: .95rem;
+    color: var(--muted);
+    line-height: 1.55;
+    margin-bottom: 16px;
+  }
+  .gavel-quote {
+    font-size: 1.15rem;
+    color: var(--gold);
+    min-height: 1.5em;
+  }
+  .gavel-quote::before { content: '⚖️ "'; }
+  .gavel-quote::after  { content: '"'; }
+
+  /* ── Loading overlay ── */
+  .overlay {
+    position: fixed; inset: 0;
+    background: rgba(10,10,15,.92);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .3s;
+  }
+  .overlay.active { opacity: 1; pointer-events: all; }
+  .overlay .spinner {
+    font-size: 4rem;
+    animation: spin 1.8s linear infinite;
+    margin-bottom: 22px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .overlay p {
+    font-size: 1.5rem;
+    color: var(--gold);
+    letter-spacing: 2px;
+  }
+
+  /* ── Error ── */
+  .error-msg {
+    text-align: center;
+    padding: 40px 20px;
+    display: none;
+  }
+  .error-msg.visible { display: block; }
+  .error-msg p {
+    color: var(--red);
+    font-size: 1.2rem;
+    margin-bottom: 8px;
+  }
+  .error-msg .detail {
+    color: var(--muted);
+    font-size: .9rem;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 700px) {
+    .sides { grid-template-columns: 1fr; }
+    .header { padding: 18px 12px 14px; }
+    .logo { font-size: 1.4rem; }
+    .verdict-card { padding: 24px 18px; }
+    .verdict-text { font-size: 2rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="logo"><span>⚖️</span> STOCK DEFENDER</div>
+  <div class="input-group">
+    <input type="text" id="tickerInput" placeholder="e.g. AAPL" maxlength="10" autocomplete="off">
+    <button class="btn" id="submitBtn">Enter Courtroom</button>
+  </div>
+</div>
+
+<!-- Loading overlay -->
+<div class="overlay" id="overlay">
+  <div class="spinner">⚖️</div>
+  <p>Court is now in session...</p>
+</div>
+
+<!-- Error -->
+<div class="error-msg" id="errorMsg">
+  <p>⚠️ Order in the court!</p>
+  <p class="detail" id="errorDetail"></p>
+</div>
+
+<!-- Courtroom -->
+<div class="courtroom" id="courtroom">
+  <div class="courtroom-floor">
+    <div class="sides">
+      <!-- Prosecutor -->
+      <div class="panel prosecutor" id="prosecutorPanel">
+        <div class="character">
+          <div class="avatar">🧑‍⚖️</div>
+          <div class="role">Prosecutor</div>
+        </div>
+        <div class="speech-bubble">
+          <ul id="prosecutorList"></ul>
+        </div>
+      </div>
+      <!-- Defense -->
+      <div class="panel defense" id="defensePanel">
+        <div class="character">
+          <div class="avatar">👨‍💼</div>
+          <div class="role">Defense</div>
+        </div>
+        <div class="speech-bubble">
+          <ul id="defenseList"></ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Verdict -->
+    <div class="verdict-wrap">
+      <div class="verdict-card" id="verdictCard">
+        <div class="verdict-label">Judge's Verdict</div>
+        <div class="verdict-text" id="verdictText"></div>
+        <div class="risk-badge" id="riskBadge"></div>
+        <div class="summary" id="summaryText"></div>
+        <div class="gavel-quote" id="gavelQuote"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API_KEY = 'AIzaSyCfVqHAwruTS8xnwPbr53gDNMeufP1vVtg';
+  const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
+
+  const $ = id => document.getElementById(id);
+
+  const tickerInput = $('tickerInput');
+  const submitBtn   = $('submitBtn');
+  const overlay     = $('overlay');
+  const errorMsg    = $('errorMsg');
+  const errorDetail = $('errorDetail');
+  const courtroom   = $('courtroom');
+
+  // ── Gemini fetch helper ──
+  async function askGemini(prompt) {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }]
+      })
+    });
+    if (!res.ok) throw new Error(`API error ${res.status}`);
+    const data = await res.json();
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  }
+
+  // ── Safe JSON parse (strips markdown fences) ──
+  function safeParse(raw) {
+    let cleaned = raw.trim();
+    cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '');
+    cleaned = cleaned.trim();
+    return JSON.parse(cleaned);
+  }
+
+  // ── Typewriter effect ──
+  function typewriter(el, text, speed = 55) {
+    el.textContent = '';
+    let i = 0;
+    return new Promise(resolve => {
+      function tick() {
+        if (i < text.length) {
+          el.textContent += text[i++];
+          setTimeout(tick, speed);
+        } else {
+          resolve();
+        }
+      }
+      tick();
+    });
+  }
+
+  // ── Staggered bullet reveal ──
+  function revealBullets(listEl, items, baseDelay = 0) {
+    listEl.innerHTML = '';
+    items.forEach((txt, i) => {
+      const li = document.createElement('li');
+      li.textContent = txt;
+      listEl.appendChild(li);
+      setTimeout(() => li.classList.add('show'), baseDelay + i * 150);
+    });
+  }
+
+  // ── Main flow ──
+  async function runTrial(ticker) {
+    // Reset
+    courtroom.classList.remove('visible');
+    errorMsg.classList.remove('visible');
+    $('prosecutorPanel').classList.remove('show');
+    $('defensePanel').classList.remove('show');
+    $('verdictCard').classList.remove('show', 'buy', 'hold', 'avoid');
+    $('prosecutorList').innerHTML = '';
+    $('defenseList').innerHTML = '';
+    $('verdictText').textContent = '';
+    $('riskBadge').textContent = '';
+    $('riskBadge').className = 'risk-badge';
+    $('summaryText').textContent = '';
+    $('gavelQuote').textContent = '';
+
+    overlay.classList.add('active');
+
+    const prosecutorPrompt = `You are a ruthless prosecuting attorney in a stock investment trial. The stock on trial is ${ticker}. Argue aggressively why this is a BAD investment. Cover: overvaluation, risks, competition, macro threats, red flags. Be dramatic and punchy. Return exactly 4 short punchy argument points as a JSON array of strings. No markdown, just raw JSON array.`;
+
+    const defensePrompt = `You are a passionate defense attorney fighting for the investment case of ${ticker}. Argue why this is a GREAT investment. Cover: growth runway, competitive moat, catalysts, financials, market position. Be enthusiastic and compelling. Return exactly 4 short punchy argument points as a JSON array of strings. No markdown, just raw JSON array.`;
+
+    const judgePrompt = `You are a wise and neutral judge presiding over the investment trial of ${ticker}. You have heard both sides. Deliver your verdict. Return a JSON object with exactly these fields:\n{\n  "verdict": "BUY" | "HOLD" | "AVOID",\n  "risk": "LOW" | "MEDIUM" | "HIGH",\n  "summary": "2 sentence neutral summary of the overall case",\n  "gavel_quote": "One dramatic judge quote to close the trial, max 12 words"\n}\nNo markdown, raw JSON only.`;
+
+    try {
+      const [prosecutorRaw, defenseRaw, judgeRaw] = await Promise.all([
+        askGemini(prosecutorPrompt),
+        askGemini(defensePrompt),
+        askGemini(judgePrompt)
+      ]);
+
+      let prosecutorArgs, defenseArgs, judgeData;
+
+      try { prosecutorArgs = safeParse(prosecutorRaw); }
+      catch { prosecutorArgs = [prosecutorRaw]; }
+
+      try { defenseArgs = safeParse(defenseRaw); }
+      catch { defenseArgs = [defenseRaw]; }
+
+      try { judgeData = safeParse(judgeRaw); }
+      catch {
+        judgeData = {
+          verdict: 'HOLD',
+          risk: 'MEDIUM',
+          summary: judgeRaw,
+          gavel_quote: 'The court has spoken.'
+        };
+      }
+
+      // Ensure arrays
+      if (!Array.isArray(prosecutorArgs)) prosecutorArgs = [String(prosecutorArgs)];
+      if (!Array.isArray(defenseArgs))    defenseArgs = [String(defenseArgs)];
+
+      overlay.classList.remove('active');
+      courtroom.classList.add('visible');
+
+      // ── Staggered reveal ──
+
+      // 1. Prosecutor
+      setTimeout(() => {
+        $('prosecutorPanel').classList.add('show');
+        revealBullets($('prosecutorList'), prosecutorArgs, 300);
+      }, 200);
+
+      // 2. Defense
+      setTimeout(() => {
+        $('defensePanel').classList.add('show');
+        revealBullets($('defenseList'), defenseArgs, 300);
+      }, 900);
+
+      // 3. Verdict
+      setTimeout(() => {
+        const card = $('verdictCard');
+        const v = (judgeData.verdict || 'HOLD').toUpperCase();
+        const r = (judgeData.risk || 'MEDIUM').toUpperCase();
+
+        $('verdictText').textContent = v;
+
+        if (v === 'BUY')       card.classList.add('buy');
+        else if (v === 'AVOID') card.classList.add('avoid');
+        else                    card.classList.add('hold');
+
+        const riskBadge = $('riskBadge');
+        riskBadge.textContent = `RISK: ${r}`;
+        if (r === 'LOW')       riskBadge.classList.add('risk-low');
+        else if (r === 'HIGH') riskBadge.classList.add('risk-high');
+        else                   riskBadge.classList.add('risk-medium');
+
+        $('summaryText').textContent = judgeData.summary || '';
+
+        card.classList.add('show');
+
+        // Typewriter on gavel quote
+        setTimeout(() => {
+          typewriter($('gavelQuote'), judgeData.gavel_quote || 'The court has spoken.');
+        }, 550);
+      }, 1800);
+
+    } catch (err) {
+      overlay.classList.remove('active');
+      errorMsg.classList.add('visible');
+      errorDetail.textContent = err.message || 'Something went wrong. Try again.';
+    }
+  }
+
+  // ── Event listeners ──
+  submitBtn.addEventListener('click', () => {
+    const ticker = tickerInput.value.trim().toUpperCase();
+    if (!ticker) { tickerInput.focus(); return; }
+    runTrial(ticker);
+  });
+
+  tickerInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') submitBtn.click();
+  });
+</script>
+</body>
+</html>
