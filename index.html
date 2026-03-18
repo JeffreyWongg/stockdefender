@@ -23,8 +23,10 @@
     font-family: 'Special Elite', cursive;
     background: var(--bg);
     color: var(--text);
-    min-height: 100vh;
-    overflow-x: hidden;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
 
   /* ── Header ── */
@@ -34,42 +36,40 @@
     justify-content: center;
     gap: 18px;
     flex-wrap: wrap;
-    padding: 28px 20px 18px;
+    padding: 18px 20px 14px;
     background: linear-gradient(180deg, #12121f 0%, var(--bg) 100%);
     border-bottom: 2px solid #222;
+    flex-shrink: 0;
+    z-index: 10;
   }
   .logo {
-    font-size: 2rem;
+    font-size: 1.8rem;
     letter-spacing: 3px;
     color: var(--gold);
     text-shadow: 0 0 18px rgba(243,156,18,.35);
     display: flex; align-items: center; gap: 10px;
   }
-  .logo span { font-size: 1.6rem; }
-  .input-group {
-    display: flex;
-    gap: 10px;
-  }
+  .logo span { font-size: 1.5rem; }
+  .input-group { display: flex; gap: 10px; }
   #tickerInput {
     font-family: 'Special Elite', cursive;
-    font-size: 1.15rem;
-    padding: 10px 18px;
+    font-size: 1.1rem;
+    padding: 9px 16px;
     border: 2px solid #333;
     border-radius: 8px;
     background: #111;
     color: var(--gold);
     text-transform: uppercase;
-    width: 160px;
+    width: 150px;
     outline: none;
     transition: border-color .2s;
   }
   #tickerInput:focus { border-color: var(--gold); }
   #tickerInput::placeholder { color: #555; text-transform: none; }
-
   .btn {
     font-family: 'Special Elite', cursive;
-    font-size: 1.05rem;
-    padding: 10px 24px;
+    font-size: 1rem;
+    padding: 9px 22px;
     border: 2px solid var(--gold);
     border-radius: 8px;
     background: transparent;
@@ -80,131 +80,220 @@
   }
   .btn:hover { background: var(--gold); color: #111; }
 
-  /* ── Courtroom ── */
-  .courtroom {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 30px 20px 60px;
-    display: none;
-  }
-  .courtroom.visible { display: block; }
-
-  .courtroom-floor {
+  /* ── Courtroom Stage ── */
+  .stage {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
     background:
       repeating-linear-gradient(
         90deg,
         #1a120b 0px, #1a120b 48px,
         #231a10 48px, #231a10 50px
       );
-    border-radius: 18px;
-    padding: 36px 24px 42px;
-    border: 2px solid #2a2016;
-    position: relative;
-    overflow: hidden;
   }
-  .courtroom-floor::before {
+  .stage::before {
     content: '';
     position: absolute; inset: 0;
-    background: linear-gradient(180deg, rgba(10,10,15,.55) 0%, transparent 40%, transparent 70%, rgba(10,10,15,.6) 100%);
+    background: linear-gradient(180deg, rgba(10,10,15,.6) 0%, transparent 30%, transparent 65%, rgba(10,10,15,.7) 100%);
     pointer-events: none;
-  }
-
-  .sides {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 28px;
-    position: relative;
     z-index: 1;
   }
 
-  /* ── Character panels ── */
-  .panel {
-    opacity: 0;
-    transform: translateY(30px);
+  /* ── Characters ── */
+  .character {
+    position: absolute;
+    bottom: 140px;
+    width: 340px;
+    z-index: 5;
+    transition: transform .5s cubic-bezier(.22,.68,.36,1.1);
   }
-  .panel.show {
-    animation: panelIn .6s ease forwards;
+  .character.prosecutor {
+    left: 0;
+    transform: translateX(-110%);
   }
-  @keyframes panelIn {
-    to { opacity: 1; transform: translateY(0); }
+  .character.prosecutor.on-stage {
+    transform: translateX(0%);
+  }
+  .character.defense {
+    right: 0;
+    transform: translateX(110%);
+  }
+  .character.defense.on-stage {
+    transform: translateX(0%);
   }
 
-  .character {
+  .char-inner {
+    padding: 24px 28px 32px;
     text-align: center;
-    margin-bottom: 14px;
   }
   .avatar {
-    font-size: 3.5rem;
+    font-size: 10rem;
     line-height: 1;
-    margin-bottom: 4px;
-    filter: drop-shadow(0 0 12px rgba(255,255,255,.12));
+    margin-bottom: 6px;
+    filter: drop-shadow(0 4px 30px rgba(0,0,0,.6));
   }
-  .role {
-    font-size: 1.15rem;
-    letter-spacing: 2px;
+  .char-name {
+    font-size: 1.1rem;
+    letter-spacing: 3px;
     text-transform: uppercase;
   }
-  .prosecutor .role { color: var(--red); }
-  .defense .role    { color: var(--blue); }
+  .prosecutor .char-name { color: var(--red); }
+  .defense .char-name    { color: var(--blue); }
 
-  .speech-bubble {
-    background: var(--card);
-    border-radius: 14px;
-    padding: 22px 20px;
-    position: relative;
-  }
-  .prosecutor .speech-bubble { border-left: 4px solid var(--red); }
-  .defense .speech-bubble    { border-left: 4px solid var(--blue); }
-
-  .speech-bubble ul {
-    list-style: none;
-    padding: 0;
-  }
-  .speech-bubble li {
-    padding: 9px 0;
-    border-bottom: 1px solid #262640;
-    font-size: .98rem;
-    line-height: 1.45;
-    opacity: 0;
-    transform: translateX(-12px);
-  }
-  .speech-bubble li:last-child { border-bottom: none; }
-  .speech-bubble li.show {
-    animation: bulletIn .4s ease forwards;
-  }
-  @keyframes bulletIn {
-    to { opacity: 1; transform: translateX(0); }
-  }
-
-  .prosecutor li::before { content: '⚠️ '; }
-  .defense li::before    { content: '✅ '; }
-
-  /* ── Verdict ── */
-  .verdict-wrap {
-    position: relative;
-    z-index: 1;
+  /* ── Dialogue Box (bottom of screen, Ace Attorney style) ── */
+  .dialogue-box {
+    position: absolute;
+    bottom: 0;
+    left: 0; right: 0;
+    z-index: 20;
+    background: linear-gradient(180deg, rgba(10,10,20,.0) 0%, rgba(10,10,20,.95) 15%, #0d0d1a 100%);
+    padding: 18px 30px 28px;
+    min-height: 160px;
     display: flex;
-    justify-content: center;
-    margin-top: 34px;
+    flex-direction: column;
+    justify-content: flex-end;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .3s;
   }
+  .dialogue-box.visible {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .speaker-tag {
+    font-size: .95rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    padding: 3px 14px;
+    display: inline-block;
+    border-radius: 4px;
+    width: fit-content;
+  }
+  .speaker-tag.prosecution {
+    background: var(--red);
+    color: #fff;
+  }
+  .speaker-tag.defense-tag {
+    background: var(--blue);
+    color: #fff;
+  }
+  .speaker-tag.judge-tag {
+    background: var(--gold);
+    color: #111;
+  }
+
+  .dialogue-text-box {
+    background: var(--card);
+    border: 2px solid #333;
+    border-radius: 10px;
+    padding: 18px 22px;
+    min-height: 80px;
+    position: relative;
+  }
+  .prosecution-border { border-left: 4px solid var(--red); }
+  .defense-border     { border-left: 4px solid var(--blue); }
+  .judge-border       { border-left: 4px solid var(--gold); }
+
+  .dialogue-content {
+    font-size: 1.15rem;
+    line-height: 1.55;
+    min-height: 1.5em;
+  }
+
+  .click-prompt {
+    position: absolute;
+    bottom: 8px;
+    right: 14px;
+    font-size: .75rem;
+    color: var(--gold);
+    animation: blink 1s ease infinite;
+  }
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .3; }
+  }
+
+  /* ── OBJECTION! Flash ── */
+  .objection-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,.7);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .15s;
+  }
+  .objection-overlay.flash {
+    opacity: 1;
+    animation: objFlash .7s ease forwards;
+  }
+  @keyframes objFlash {
+    0%   { opacity: 0; }
+    10%  { opacity: 1; }
+    70%  { opacity: 1; }
+    100% { opacity: 0; }
+  }
+
+  .objection-text {
+    font-size: 5rem;
+    font-weight: bold;
+    letter-spacing: 8px;
+    text-transform: uppercase;
+    animation: objShake .7s ease;
+    text-shadow: 0 0 40px currentColor, 0 0 80px currentColor;
+  }
+  .objection-text.red  { color: var(--red); }
+  .objection-text.blue { color: var(--blue); }
+
+  @keyframes objShake {
+    0%   { transform: scale(2.5) rotate(-3deg); opacity: 0; }
+    15%  { transform: scale(1.1) rotate(1deg); opacity: 1; }
+    25%  { transform: scale(1) rotate(0deg); }
+    100% { transform: scale(1) rotate(0deg); }
+  }
+
+  /* ── Verdict Overlay ── */
+  .verdict-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(10,10,15,.92);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .5s;
+  }
+  .verdict-overlay.visible {
+    opacity: 1;
+    pointer-events: all;
+  }
+
   .verdict-card {
     background: var(--card);
     border: 3px solid var(--gold);
     border-radius: 18px;
-    padding: 32px 44px;
+    padding: 36px 50px;
     text-align: center;
     max-width: 520px;
-    width: 100%;
-    opacity: 0;
+    width: 90%;
     transform: scale(.8);
+    opacity: 0;
     box-shadow: 0 0 40px rgba(243,156,18,.12);
   }
   .verdict-card.show {
-    animation: gavelBang .55s cubic-bezier(.17,.67,.32,1.3) forwards;
+    animation: gavelBang .6s cubic-bezier(.17,.67,.32,1.3) forwards;
   }
   @keyframes gavelBang {
     0%   { opacity: 0; transform: scale(.8); }
-    65%  { opacity: 1; transform: scale(1.1); }
+    65%  { opacity: 1; transform: scale(1.12); }
     100% { opacity: 1; transform: scale(1); }
   }
 
@@ -216,18 +305,16 @@
     margin-bottom: 8px;
   }
   .verdict-text {
-    font-size: 2.8rem;
+    font-size: 3rem;
     letter-spacing: 6px;
-    font-weight: bold;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
   }
-  .verdict-card.buy  .verdict-text { color: var(--green); text-shadow: 0 0 28px rgba(39,174,96,.5); }
-  .verdict-card.hold .verdict-text { color: var(--gold);  text-shadow: 0 0 28px rgba(243,156,18,.5); }
-  .verdict-card.avoid .verdict-text{ color: var(--red);   text-shadow: 0 0 28px rgba(192,57,43,.5); }
-
-  .verdict-card.buy  { box-shadow: 0 0 50px rgba(39,174,96,.18); }
-  .verdict-card.hold { box-shadow: 0 0 50px rgba(243,156,18,.18); }
-  .verdict-card.avoid{ box-shadow: 0 0 50px rgba(192,57,43,.18); }
+  .verdict-card.buy  .verdict-text { color: var(--green); text-shadow: 0 0 30px rgba(39,174,96,.5); }
+  .verdict-card.hold .verdict-text { color: var(--gold);  text-shadow: 0 0 30px rgba(243,156,18,.5); }
+  .verdict-card.avoid .verdict-text{ color: var(--red);   text-shadow: 0 0 30px rgba(192,57,43,.5); }
+  .verdict-card.buy   { box-shadow: 0 0 60px rgba(39,174,96,.2); }
+  .verdict-card.hold  { box-shadow: 0 0 60px rgba(243,156,18,.2); }
+  .verdict-card.avoid { box-shadow: 0 0 60px rgba(192,57,43,.2); }
 
   .risk-badge {
     display: inline-block;
@@ -235,7 +322,7 @@
     border-radius: 20px;
     font-size: .85rem;
     letter-spacing: 2px;
-    margin-bottom: 14px;
+    margin-bottom: 16px;
   }
   .risk-low    { background: rgba(39,174,96,.18); color: var(--green); border: 1px solid var(--green); }
   .risk-medium { background: rgba(243,156,18,.18); color: var(--gold); border: 1px solid var(--gold); }
@@ -245,7 +332,7 @@
     font-size: .95rem;
     color: var(--muted);
     line-height: 1.55;
-    margin-bottom: 16px;
+    margin-bottom: 18px;
   }
   .gavel-quote {
     font-size: 1.15rem;
@@ -255,10 +342,14 @@
   .gavel-quote::before { content: '⚖️ "'; }
   .gavel-quote::after  { content: '"'; }
 
+  .verdict-restart {
+    margin-top: 22px;
+  }
+
   /* ── Loading overlay ── */
   .overlay {
     position: fixed; inset: 0;
-    background: rgba(10,10,15,.92);
+    background: rgba(10,10,15,.94);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -283,28 +374,90 @@
 
   /* ── Error ── */
   .error-msg {
-    text-align: center;
-    padding: 40px 20px;
+    position: absolute;
+    inset: 0;
+    z-index: 30;
     display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    background: rgba(10,10,15,.9);
   }
-  .error-msg.visible { display: block; }
-  .error-msg p {
-    color: var(--red);
-    font-size: 1.2rem;
+  .error-msg.visible { display: flex; }
+  .error-msg p { color: var(--red); font-size: 1.3rem; margin-bottom: 8px; }
+  .error-msg .detail { color: var(--muted); font-size: .9rem; margin-bottom: 18px; }
+
+  /* ── Welcome state ── */
+  .welcome {
+    position: absolute;
+    inset: 0;
+    z-index: 8;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    text-align: center;
+  }
+  .welcome .big-gavel {
+    font-size: 5rem;
     margin-bottom: 8px;
+    filter: drop-shadow(0 0 20px rgba(243,156,18,.3));
   }
-  .error-msg .detail {
+  .welcome h2 {
+    color: var(--gold);
+    font-size: 1.5rem;
+    letter-spacing: 3px;
+  }
+  .welcome p {
     color: var(--muted);
-    font-size: .9rem;
+    font-size: 1rem;
   }
 
   /* ── Responsive ── */
+  /* ── Skip button ── */
+  .skip-btn {
+    position: absolute;
+    top: 14px;
+    right: 18px;
+    z-index: 60;
+    font-family: 'Special Elite', cursive;
+    font-size: .85rem;
+    padding: 7px 18px;
+    border: 1px solid #555;
+    border-radius: 6px;
+    background: rgba(20,20,30,.85);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all .2s;
+    display: none;
+  }
+  .skip-btn:hover { border-color: var(--gold); color: var(--gold); }
+  .skip-btn.visible { display: block; }
+
   @media (max-width: 700px) {
-    .sides { grid-template-columns: 1fr; }
-    .header { padding: 18px 12px 14px; }
-    .logo { font-size: 1.4rem; }
-    .verdict-card { padding: 24px 18px; }
-    .verdict-text { font-size: 2rem; }
+    .character { width: 220px; }
+    .avatar { font-size: 6rem; }
+    .objection-text { font-size: 3rem; }
+    .dialogue-content { font-size: 1rem; }
+    .header { padding: 12px 10px 10px; gap: 10px; }
+    .logo { font-size: 1.3rem; }
+    .verdict-card { padding: 24px 20px; }
+    .verdict-text { font-size: 2.2rem; }
+  }
+
+  /* ── Screen shake ── */
+  .shake {
+    animation: screenShake .4s ease;
+  }
+  @keyframes screenShake {
+    0%   { transform: translateX(0); }
+    15%  { transform: translateX(-8px); }
+    30%  { transform: translateX(8px); }
+    45%  { transform: translateX(-5px); }
+    60%  { transform: translateX(5px); }
+    75%  { transform: translateX(-2px); }
+    100% { transform: translateX(0); }
   }
 </style>
 </head>
@@ -325,49 +478,68 @@
   <p>Court is now in session...</p>
 </div>
 
-<!-- Error -->
-<div class="error-msg" id="errorMsg">
-  <p>⚠️ Order in the court!</p>
-  <p class="detail" id="errorDetail"></p>
-</div>
+<!-- Stage -->
+<div class="stage" id="stage">
 
-<!-- Courtroom -->
-<div class="courtroom" id="courtroom">
-  <div class="courtroom-floor">
-    <div class="sides">
-      <!-- Prosecutor -->
-      <div class="panel prosecutor" id="prosecutorPanel">
-        <div class="character">
-          <div class="avatar">🧑‍⚖️</div>
-          <div class="role">Prosecutor</div>
-        </div>
-        <div class="speech-bubble">
-          <ul id="prosecutorList"></ul>
-        </div>
-      </div>
-      <!-- Defense -->
-      <div class="panel defense" id="defensePanel">
-        <div class="character">
-          <div class="avatar">👨‍💼</div>
-          <div class="role">Defense</div>
-        </div>
-        <div class="speech-bubble">
-          <ul id="defenseList"></ul>
-        </div>
-      </div>
+  <!-- Welcome -->
+  <div class="welcome" id="welcome">
+    <div class="big-gavel">⚖️</div>
+    <h2>Enter a Ticker to Begin the Trial</h2>
+    <p>The courtroom awaits your case.</p>
+  </div>
+
+  <!-- Characters -->
+  <div class="character prosecutor" id="prosecutorChar">
+    <div class="char-inner">
+      <div class="avatar">🧑‍⚖️</div>
+      <div class="char-name">Prosecutor</div>
     </div>
+  </div>
+  <div class="character defense" id="defenseChar">
+    <div class="char-inner">
+      <div class="avatar">👨‍💼</div>
+      <div class="char-name">Defense</div>
+    </div>
+  </div>
 
-    <!-- Verdict -->
-    <div class="verdict-wrap">
-      <div class="verdict-card" id="verdictCard">
-        <div class="verdict-label">Judge's Verdict</div>
-        <div class="verdict-text" id="verdictText"></div>
-        <div class="risk-badge" id="riskBadge"></div>
-        <div class="summary" id="summaryText"></div>
-        <div class="gavel-quote" id="gavelQuote"></div>
+  <!-- Skip button -->
+  <button class="skip-btn" id="skipBtn">⏩ Skip to Verdict</button>
+
+  <!-- OBJECTION! overlay -->
+  <div class="objection-overlay" id="objectionOverlay">
+    <div class="objection-text" id="objectionText">OBJECTION!</div>
+  </div>
+
+  <!-- Dialogue box -->
+  <div class="dialogue-box" id="dialogueBox">
+    <div class="speaker-tag" id="speakerTag"></div>
+    <div class="dialogue-text-box" id="dialogueTextBox">
+      <div class="dialogue-content" id="dialogueContent"></div>
+      <div class="click-prompt" id="clickPrompt">▼ CLICK TO CONTINUE</div>
+    </div>
+  </div>
+
+  <!-- Verdict -->
+  <div class="verdict-overlay" id="verdictOverlay">
+    <div class="verdict-card" id="verdictCard">
+      <div class="verdict-label">⚖️ Judge's Verdict</div>
+      <div class="verdict-text" id="verdictText"></div>
+      <div class="risk-badge" id="riskBadge"></div>
+      <div class="summary" id="summaryText"></div>
+      <div class="gavel-quote" id="gavelQuote"></div>
+      <div class="verdict-restart">
+        <button class="btn" id="restartBtn">New Trial</button>
       </div>
     </div>
   </div>
+
+  <!-- Error -->
+  <div class="error-msg" id="errorMsg">
+    <p>⚠️ Order in the court!</p>
+    <p class="detail" id="errorDetail"></p>
+    <button class="btn" onclick="document.getElementById('errorMsg').classList.remove('visible')">Dismiss</button>
+  </div>
+
 </div>
 
 <script>
@@ -376,85 +548,160 @@
 
   const $ = id => document.getElementById(id);
 
-  const tickerInput = $('tickerInput');
-  const submitBtn   = $('submitBtn');
-  const overlay     = $('overlay');
-  const errorMsg    = $('errorMsg');
-  const errorDetail = $('errorDetail');
-  const courtroom   = $('courtroom');
-
-  // ── Gemini fetch helper ──
+  // ── Gemini fetch ──
   async function askGemini(prompt) {
     const res = await fetch(API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }]
-      })
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
     });
     if (!res.ok) throw new Error(`API error ${res.status}`);
     const data = await res.json();
     return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
   }
 
-  // ── Safe JSON parse (strips markdown fences) ──
+  // ── Safe JSON parse ──
   function safeParse(raw) {
     let cleaned = raw.trim();
     cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '');
-    cleaned = cleaned.trim();
-    return JSON.parse(cleaned);
+    return JSON.parse(cleaned.trim());
   }
 
-  // ── Typewriter effect ──
-  function typewriter(el, text, speed = 55) {
-    el.textContent = '';
-    let i = 0;
+  // ── Typewriter ──
+  function typewriter(el, text, speed = 30) {
     return new Promise(resolve => {
+      el.textContent = '';
+      if (skipAll) { el.textContent = text; resolve(); return; }
+      let i = 0;
       function tick() {
+        if (skipAll || !isTyping) {
+          el.textContent = text;
+          resolve();
+          return;
+        }
         if (i < text.length) {
           el.textContent += text[i++];
           setTimeout(tick, speed);
-        } else {
-          resolve();
-        }
+        } else resolve();
       }
       tick();
     });
   }
 
-  // ── Staggered bullet reveal ──
-  function revealBullets(listEl, items, baseDelay = 0) {
-    listEl.innerHTML = '';
-    items.forEach((txt, i) => {
-      const li = document.createElement('li');
-      li.textContent = txt;
-      listEl.appendChild(li);
-      setTimeout(() => li.classList.add('show'), baseDelay + i * 150);
+  // ── Dialogue system ──
+  let dialogueResolve = null;
+  let isTyping = false;
+  let currentFullText = '';
+  let skipAll = false;          // When true, skip entire dialogue sequence
+  let skipResolve = null;       // Resolves when skip is triggered
+
+  function waitForClick() {
+    if (skipAll) return Promise.resolve();
+    return new Promise(resolve => { dialogueResolve = resolve; });
+  }
+
+  // Click / key to advance
+  document.addEventListener('click', advanceDialogue);
+  document.addEventListener('keydown', e => {
+    if (e.key === ' ' || e.key === 'Enter') advanceDialogue();
+  });
+
+  function advanceDialogue() {
+    if (skipAll) return;
+    if (isTyping) {
+      // Skip typewriter — show full text immediately
+      isTyping = false;
+      $('dialogueContent').textContent = currentFullText;
+      return;
+    }
+    if (dialogueResolve) {
+      const r = dialogueResolve;
+      dialogueResolve = null;
+      r();
+    }
+  }
+
+  // Show one dialogue line with typewriter
+  async function showDialogue(speaker, text, borderClass, tagClass) {
+    if (skipAll) return;
+
+    const box = $('dialogueBox');
+    const tag = $('speakerTag');
+    const textBox = $('dialogueTextBox');
+    const content = $('dialogueContent');
+    const prompt = $('clickPrompt');
+
+    tag.textContent = speaker;
+    tag.className = 'speaker-tag ' + tagClass;
+    textBox.className = 'dialogue-text-box ' + borderClass;
+    content.textContent = '';
+    prompt.style.visibility = 'hidden';
+    box.classList.add('visible');
+
+    currentFullText = text;
+    isTyping = true;
+    await typewriter(content, text, 25);
+    isTyping = false;
+
+    if (skipAll) return;
+    prompt.style.visibility = 'visible';
+    await waitForClick();
+    prompt.style.visibility = 'hidden';
+  }
+
+  // ── Objection flash ──
+  function flashObjection(color) {
+    if (skipAll) return Promise.resolve();
+    return new Promise(resolve => {
+      const ov = $('objectionOverlay');
+      const txt = $('objectionText');
+      const stage = $('stage');
+
+      txt.className = 'objection-text ' + color;
+      ov.classList.remove('flash');
+
+      // Force reflow
+      void ov.offsetWidth;
+      ov.classList.add('flash');
+
+      // Screen shake
+      stage.classList.add('shake');
+      setTimeout(() => stage.classList.remove('shake'), 400);
+
+      setTimeout(() => {
+        ov.classList.remove('flash');
+        resolve();
+      }, 750);
     });
   }
 
-  // ── Main flow ──
-  async function runTrial(ticker) {
-    // Reset
-    courtroom.classList.remove('visible');
-    errorMsg.classList.remove('visible');
-    $('prosecutorPanel').classList.remove('show');
-    $('defensePanel').classList.remove('show');
-    $('verdictCard').classList.remove('show', 'buy', 'hold', 'avoid');
-    $('prosecutorList').innerHTML = '';
-    $('defenseList').innerHTML = '';
-    $('verdictText').textContent = '';
-    $('riskBadge').textContent = '';
-    $('riskBadge').className = 'risk-badge';
-    $('summaryText').textContent = '';
-    $('gavelQuote').textContent = '';
+  // ── Slide characters ──
+  function slideIn(who) {
+    $(who + 'Char').classList.add('on-stage');
+  }
+  function slideOut(who) {
+    $(who + 'Char').classList.remove('on-stage');
+  }
 
-    overlay.classList.add('active');
+  // ── Sleep helper (respects skip) ──
+  const sleep = ms => skipAll ? Promise.resolve() : new Promise(r => setTimeout(r, ms));
+
+  // ── Main trial ──
+  async function runTrial(ticker) {
+    // Reset everything
+    skipAll = false;
+    $('welcome').style.display = 'none';
+    $('errorMsg').classList.remove('visible');
+    $('verdictOverlay').classList.remove('visible');
+    $('verdictCard').classList.remove('show', 'buy', 'hold', 'avoid');
+    $('dialogueBox').classList.remove('visible');
+    $('skipBtn').classList.remove('visible');
+    slideOut('prosecutor');
+    slideOut('defense');
+    $('overlay').classList.add('active');
 
     const prosecutorPrompt = `You are a ruthless prosecuting attorney in a stock investment trial. The stock on trial is ${ticker}. Argue aggressively why this is a BAD investment. Cover: overvaluation, risks, competition, macro threats, red flags. Be dramatic and punchy. Return exactly 4 short punchy argument points as a JSON array of strings. No markdown, just raw JSON array.`;
-
     const defensePrompt = `You are a passionate defense attorney fighting for the investment case of ${ticker}. Argue why this is a GREAT investment. Cover: growth runway, competitive moat, catalysts, financials, market position. Be enthusiastic and compelling. Return exactly 4 short punchy argument points as a JSON array of strings. No markdown, just raw JSON array.`;
-
     const judgePrompt = `You are a wise and neutral judge presiding over the investment trial of ${ticker}. You have heard both sides. Deliver your verdict. Return a JSON object with exactly these fields:\n{\n  "verdict": "BUY" | "HOLD" | "AVOID",\n  "risk": "LOW" | "MEDIUM" | "HIGH",\n  "summary": "2 sentence neutral summary of the overall case",\n  "gavel_quote": "One dramatic judge quote to close the trial, max 12 words"\n}\nNo markdown, raw JSON only.`;
 
     try {
@@ -464,89 +711,172 @@
         askGemini(judgePrompt)
       ]);
 
-      let prosecutorArgs, defenseArgs, judgeData;
-
-      try { prosecutorArgs = safeParse(prosecutorRaw); }
-      catch { prosecutorArgs = [prosecutorRaw]; }
-
-      try { defenseArgs = safeParse(defenseRaw); }
-      catch { defenseArgs = [defenseRaw]; }
-
-      try { judgeData = safeParse(judgeRaw); }
-      catch {
-        judgeData = {
-          verdict: 'HOLD',
-          risk: 'MEDIUM',
-          summary: judgeRaw,
-          gavel_quote: 'The court has spoken.'
-        };
+      let pArgs, dArgs, judgeData;
+      try { pArgs = safeParse(prosecutorRaw); } catch { pArgs = [prosecutorRaw]; }
+      try { dArgs = safeParse(defenseRaw); }    catch { dArgs = [defenseRaw]; }
+      try { judgeData = safeParse(judgeRaw); }  catch {
+        judgeData = { verdict: 'HOLD', risk: 'MEDIUM', summary: judgeRaw, gavel_quote: 'The court has spoken.' };
       }
 
-      // Ensure arrays
-      if (!Array.isArray(prosecutorArgs)) prosecutorArgs = [String(prosecutorArgs)];
-      if (!Array.isArray(defenseArgs))    defenseArgs = [String(defenseArgs)];
+      if (!Array.isArray(pArgs)) pArgs = [String(pArgs)];
+      if (!Array.isArray(dArgs)) dArgs = [String(dArgs)];
 
-      overlay.classList.remove('active');
-      courtroom.classList.add('visible');
+      $('overlay').classList.remove('active');
+      $('skipBtn').classList.add('visible');
+      await sleep(300);
 
-      // ── Staggered reveal ──
+      // ── ACE ATTORNEY DIALOGUE SEQUENCE ──
 
-      // 1. Prosecutor
-      setTimeout(() => {
-        $('prosecutorPanel').classList.add('show');
-        revealBullets($('prosecutorList'), prosecutorArgs, 300);
-      }, 200);
+      // Prosecutor opening
+      slideIn('prosecutor');
+      await sleep(500);
+      await showDialogue(
+        'PROSECUTOR',
+        `Your Honor, the people will prove beyond doubt that ${ticker} is a DANGEROUS investment!`,
+        'prosecution-border',
+        'prosecution'
+      );
 
-      // 2. Defense
-      setTimeout(() => {
-        $('defensePanel').classList.add('show');
-        revealBullets($('defenseList'), defenseArgs, 300);
-      }, 900);
+      // Prosecutor argument #1
+      await showDialogue('PROSECUTOR', pArgs[0], 'prosecution-border', 'prosecution');
+      slideOut('prosecutor');
+      await sleep(400);
 
-      // 3. Verdict
-      setTimeout(() => {
-        const card = $('verdictCard');
-        const v = (judgeData.verdict || 'HOLD').toUpperCase();
-        const r = (judgeData.risk || 'MEDIUM').toUpperCase();
+      // Defense OBJECTS to #1
+      await flashObjection('blue');
+      slideIn('defense');
+      await sleep(300);
+      await showDialogue('DEFENSE', dArgs[0], 'defense-border', 'defense-tag');
+      slideOut('defense');
+      await sleep(400);
 
-        $('verdictText').textContent = v;
+      // Prosecutor OBJECTS back for #2
+      await flashObjection('red');
+      slideIn('prosecutor');
+      await sleep(300);
+      await showDialogue('PROSECUTOR', pArgs[1], 'prosecution-border', 'prosecution');
+      slideOut('prosecutor');
+      await sleep(400);
 
-        if (v === 'BUY')       card.classList.add('buy');
-        else if (v === 'AVOID') card.classList.add('avoid');
-        else                    card.classList.add('hold');
+      // Defense OBJECTS for #2
+      await flashObjection('blue');
+      slideIn('defense');
+      await sleep(300);
+      await showDialogue('DEFENSE', dArgs[1], 'defense-border', 'defense-tag');
+      slideOut('defense');
+      await sleep(400);
 
-        const riskBadge = $('riskBadge');
-        riskBadge.textContent = `RISK: ${r}`;
-        if (r === 'LOW')       riskBadge.classList.add('risk-low');
-        else if (r === 'HIGH') riskBadge.classList.add('risk-high');
-        else                   riskBadge.classList.add('risk-medium');
+      // Prosecutor OBJECTS for #3
+      await flashObjection('red');
+      slideIn('prosecutor');
+      await sleep(300);
+      await showDialogue('PROSECUTOR', pArgs[2] || 'The evidence speaks for itself!', 'prosecution-border', 'prosecution');
+      slideOut('prosecutor');
+      await sleep(400);
 
-        $('summaryText').textContent = judgeData.summary || '';
+      // Defense OBJECTS for #3
+      await flashObjection('blue');
+      slideIn('defense');
+      await sleep(300);
+      await showDialogue('DEFENSE', dArgs[2] || 'The future is bright for this stock!', 'defense-border', 'defense-tag');
+      slideOut('defense');
+      await sleep(400);
 
-        card.classList.add('show');
+      // Prosecutor final blow #4
+      await flashObjection('red');
+      slideIn('prosecutor');
+      await sleep(300);
+      await showDialogue('PROSECUTOR', pArgs[3] || 'I rest my case, Your Honor!', 'prosecution-border', 'prosecution');
+      slideOut('prosecutor');
+      await sleep(400);
 
-        // Typewriter on gavel quote
-        setTimeout(() => {
-          typewriter($('gavelQuote'), judgeData.gavel_quote || 'The court has spoken.');
-        }, 550);
-      }, 1800);
+      // Defense final rebuttal #4
+      await flashObjection('blue');
+      slideIn('defense');
+      await sleep(300);
+      await showDialogue('DEFENSE', dArgs[3] || 'The defense rests!', 'defense-border', 'defense-tag');
+      slideOut('defense');
+      await sleep(500);
+
+      // ── JUDGE VERDICT ──
+      $('skipBtn').classList.remove('visible');
+      $('dialogueBox').classList.remove('visible');
+      $('objectionOverlay').classList.remove('flash');
+      slideOut('prosecutor');
+      slideOut('defense');
+      await sleep(skipAll ? 100 : 600);
+
+      // Show verdict overlay
+      const card = $('verdictCard');
+      const v = (judgeData.verdict || 'HOLD').toUpperCase();
+      const r = (judgeData.risk || 'MEDIUM').toUpperCase();
+
+      $('verdictText').textContent = v;
+      if (v === 'BUY')       card.classList.add('buy');
+      else if (v === 'AVOID') card.classList.add('avoid');
+      else                    card.classList.add('hold');
+
+      const riskBadge = $('riskBadge');
+      riskBadge.textContent = `RISK: ${r}`;
+      riskBadge.className = 'risk-badge';
+      if (r === 'LOW')       riskBadge.classList.add('risk-low');
+      else if (r === 'HIGH') riskBadge.classList.add('risk-high');
+      else                   riskBadge.classList.add('risk-medium');
+
+      $('summaryText').textContent = judgeData.summary || '';
+      $('gavelQuote').textContent = '';
+
+      $('verdictOverlay').classList.add('visible');
+      await sleep(200);
+      card.classList.add('show');
+      await sleep(700);
+
+      // Typewriter on gavel quote
+      await typewriter($('gavelQuote'), judgeData.gavel_quote || 'The court has spoken.');
 
     } catch (err) {
-      overlay.classList.remove('active');
-      errorMsg.classList.add('visible');
-      errorDetail.textContent = err.message || 'Something went wrong. Try again.';
+      $('overlay').classList.remove('active');
+      $('errorMsg').classList.add('visible');
+      $('errorDetail').textContent = err.message || 'Something went wrong. Try again.';
     }
   }
 
-  // ── Event listeners ──
-  submitBtn.addEventListener('click', () => {
-    const ticker = tickerInput.value.trim().toUpperCase();
-    if (!ticker) { tickerInput.focus(); return; }
+  // ── Events ──
+  $('submitBtn').addEventListener('click', e => {
+    e.stopPropagation(); // Don't trigger dialogue advance
+    const ticker = $('tickerInput').value.trim().toUpperCase();
+    if (!ticker) { $('tickerInput').focus(); return; }
     runTrial(ticker);
   });
 
-  tickerInput.addEventListener('keydown', e => {
-    if (e.key === 'Enter') submitBtn.click();
+  $('tickerInput').addEventListener('keydown', e => {
+    e.stopPropagation();
+    if (e.key === 'Enter') $('submitBtn').click();
+  });
+
+  $('skipBtn').addEventListener('click', e => {
+    e.stopPropagation();
+    skipAll = true;
+    // Immediately resolve any pending dialogue wait
+    if (dialogueResolve) {
+      const r = dialogueResolve;
+      dialogueResolve = null;
+      r();
+    }
+    // Also force-finish any typewriter in progress
+    if (isTyping) {
+      isTyping = false;
+      $('dialogueContent').textContent = currentFullText;
+    }
+  });
+
+  $('restartBtn').addEventListener('click', e => {
+    e.stopPropagation();
+    $('verdictOverlay').classList.remove('visible');
+    $('verdictCard').classList.remove('show', 'buy', 'hold', 'avoid');
+    $('welcome').style.display = '';
+    $('tickerInput').value = '';
+    $('tickerInput').focus();
   });
 </script>
 </body>
