@@ -555,6 +555,18 @@
   .skip-btn:hover { border-color: var(--gold); color: var(--gold); }
   .skip-btn.visible { display: block; }
 
+  /* ── Bold keyword emphasis ── */
+  .prosecution-border .dialogue-content strong {
+    color: var(--red);
+    text-shadow: 0 0 10px rgba(192,57,43,.4);
+  }
+  .defense-border .dialogue-content strong {
+    color: #5dade2;
+    text-shadow: 0 0 10px rgba(41,128,185,.4);
+  }
+  .bear .evidence-list strong { color: var(--red); }
+  .bull .evidence-list strong { color: #5dade2; }
+
   /* ── Screen shake ── */
   .shake { animation: screenShake .4s ease; }
   @keyframes screenShake {
@@ -696,24 +708,57 @@
 
 </div>
 
+<!-- Audio -->
+<audio id="bgMusic" loop src="Phoenix Wright Ace Attorney OST - Courtroom Lobby ~ Beginning Overture - Gyakuten Saiban Sound Box (128k).mp3"></audio>
+<audio id="objectionSfx" src="Phoenix Wright - Objection! - Azzy (128k).mp3"></audio>
+
 <script src="config.js"></script>
 <script>
   // API key loaded from config.js via <script> tag
-  const API_KEY = typeof GEMINI_API_KEY !== 'undefined' ? GEMINI_API_KEY : '';
-  const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
+  const API_KEY = typeof OPENAI_API_KEY !== 'undefined' ? OPENAI_API_KEY : '';
+  const API_URL = 'https://api.openai.com/v1/chat/completions';
 
   const $ = id => document.getElementById(id);
 
-  // ── Gemini fetch ──
+  // ── Audio ──
+  const bgMusic      = $('bgMusic');
+  const objectionSfx = $('objectionSfx');
+  bgMusic.volume      = 0.35;
+  objectionSfx.volume = 0.8;
+  function startMusic() { if (bgMusic.paused) bgMusic.play().catch(() => {}); }
+  function playObjectionSfx() { objectionSfx.currentTime = 0; objectionSfx.play().catch(() => {}); }
+
+  // ── Convert **markdown bold** → <strong> tags ──
+  function mdBold(text) {
+    return text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  }
+
+  // ── OpenAI fetch ──
   async function askGemini(prompt) {
-    const res = await fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-    });
-    if (!res.ok) throw new Error(`API error ${res.status}`);
+    let res;
+    try {
+      res = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${API_KEY}`
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [{ role: 'user', content: prompt }],
+          temperature: 0.9
+        })
+      });
+    } catch (e) {
+      throw new Error(`Network error — check your internet connection. (${e.message})`);
+    }
+    if (!res.ok) {
+      let reason = `API error ${res.status}`;
+      try { const d = await res.json(); if (d?.error?.message) reason = `${res.status}: ${d.error.message}`; } catch {}
+      throw new Error(reason);
+    }
     const data = await res.json();
-    return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    return data.choices?.[0]?.message?.content || '';
   }
 
   // ── Safe JSON parse ──
@@ -724,21 +769,17 @@
   }
 
   // ── Typewriter ──
-  function typewriter(el, text, speed = 30) {
+  // Types plain text while animating, then swaps to innerHTML so <strong> renders.
+  function typewriter(el, html, speed = 30) {
     return new Promise(resolve => {
+      const plain = html.replace(/<[^>]*>/g, '');
       el.textContent = '';
-      if (skipAll) { el.textContent = text; resolve(); return; }
+      if (skipAll) { el.innerHTML = html; resolve(); return; }
       let i = 0;
       function tick() {
-        if (skipAll || !isTyping) {
-          el.textContent = text;
-          resolve();
-          return;
-        }
-        if (i < text.length) {
-          el.textContent += text[i++];
-          setTimeout(tick, speed);
-        } else resolve();
+        if (skipAll || !isTyping) { el.innerHTML = html; resolve(); return; }
+        if (i < plain.length) { el.textContent += plain[i++]; setTimeout(tick, speed); }
+        else { el.innerHTML = html; resolve(); }
       }
       tick();
     });
@@ -764,7 +805,7 @@
     if (skipAll) return;
     if (isTyping) {
       isTyping = false;
-      $('dialogueContent').textContent = currentFullText;
+      $('dialogueContent').innerHTML = currentFullText;
       return;
     }
     if (dialogueResolve) {
@@ -811,6 +852,7 @@
       ov.classList.remove('flash');
       void ov.offsetWidth;
       ov.classList.add('flash');
+      playObjectionSfx();
       stage.classList.add('shake');
       setTimeout(() => stage.classList.remove('shake'), 400);
       setTimeout(() => { ov.classList.remove('flash'); resolve(); }, 750);
@@ -840,7 +882,7 @@
     bearList.innerHTML = '';
     pArgs.forEach(txt => {
       const li = document.createElement('li');
-      li.textContent = txt;
+      li.innerHTML = txt;
       bearList.appendChild(li);
     });
 
@@ -849,7 +891,7 @@
     bullList.innerHTML = '';
     dArgs.forEach(txt => {
       const li = document.createElement('li');
-      li.textContent = txt;
+      li.innerHTML = txt;
       bullList.appendChild(li);
     });
 
@@ -904,6 +946,7 @@
   // ── Main trial ──
   async function runTrial(ticker) {
     skipAll = false;
+    startMusic();
     $('welcome').style.display = 'none';
     $('errorMsg').classList.remove('visible');
     $('deliberationOverlay').classList.remove('visible');
@@ -914,14 +957,12 @@
     slideOut('defense');
     $('overlay').classList.add('active');
 
-    const prosecutorPrompt = `You are a ruthless prosecuting attorney in a stock investment trial. The stock on trial is ${ticker}. Argue aggressively why this is a BAD investment. Cover: overvaluation, risks, competition, macro threats, red flags. Be dramatic and punchy. Return exactly 4 short punchy argument points as a JSON array of strings. No markdown, just raw JSON array.`;
-    const defensePrompt = `You are a passionate defense attorney fighting for the investment case of ${ticker}. Argue why this is a GREAT investment. Cover: growth runway, competitive moat, catalysts, financials, market position. Be enthusiastic and compelling. Return exactly 4 short punchy argument points as a JSON array of strings. No markdown, just raw JSON array.`;
+    const prosecutorPrompt = `You are a ruthless prosecuting attorney in a stock investment trial. The stock on trial is ${ticker}. Argue aggressively why this is a BAD investment. Cover: overvaluation, risks, competition, macro threats, red flags. Be dramatic and punchy. Return exactly 4 short punchy argument points as a JSON array of strings. In each string, use **double asterisks** around 2-3 of the most critical key words or phrases. No markdown fences, just raw JSON array.`;
+    const defensePrompt = `You are a passionate defense attorney fighting for the investment case of ${ticker}. Argue why this is a GREAT investment. Cover: growth runway, competitive moat, catalysts, financials, market position. Be enthusiastic and compelling. Return exactly 4 short punchy argument points as a JSON array of strings. In each string, use **double asterisks** around 2-3 of the most critical key words or phrases. No markdown fences, just raw JSON array.`;
 
     try {
-      const [prosecutorRaw, defenseRaw] = await Promise.all([
-        askGemini(prosecutorPrompt),
-        askGemini(defensePrompt)
-      ]);
+      const prosecutorRaw = await askGemini(prosecutorPrompt);
+      const defenseRaw    = await askGemini(defensePrompt);
 
       let pArgs, dArgs;
       try { pArgs = safeParse(prosecutorRaw); } catch { pArgs = [prosecutorRaw]; }
@@ -929,6 +970,8 @@
 
       if (!Array.isArray(pArgs)) pArgs = [String(pArgs)];
       if (!Array.isArray(dArgs)) dArgs = [String(dArgs)];
+      pArgs = pArgs.map(mdBold);
+      dArgs = dArgs.map(mdBold);
 
       $('overlay').classList.remove('active');
       $('skipBtn').classList.add('visible');
@@ -1047,7 +1090,7 @@
     }
     if (isTyping) {
       isTyping = false;
-      $('dialogueContent').textContent = currentFullText;
+      $('dialogueContent').innerHTML = currentFullText;
     }
   });
 
