@@ -85,17 +85,12 @@
     flex: 1;
     position: relative;
     overflow: hidden;
-    background:
-      repeating-linear-gradient(
-        90deg,
-        #1a120b 0px, #1a120b 48px,
-        #231a10 48px, #231a10 50px
-      );
+    background: url('Screenshot-court.png') center center / cover no-repeat;
   }
   .stage::before {
     content: '';
     position: absolute; inset: 0;
-    background: linear-gradient(180deg, rgba(10,10,15,.6) 0%, transparent 30%, transparent 65%, rgba(10,10,15,.7) 100%);
+    background: linear-gradient(180deg, rgba(10,10,15,.3) 0%, transparent 30%, transparent 65%, rgba(10,10,15,.7) 100%);
     pointer-events: none;
     z-index: 1;
   }
@@ -104,7 +99,7 @@
   .character {
     position: absolute;
     bottom: 140px;
-    width: 340px;
+    width: 480px;
     z-index: 5;
     transition: transform .5s cubic-bezier(.22,.68,.36,1.1);
   }
@@ -133,6 +128,12 @@
     margin-bottom: 6px;
     filter: drop-shadow(0 4px 30px rgba(0,0,0,.6));
   }
+  .avatar img {
+    width: 450px;
+    height: auto;
+    display: block;
+    object-fit: contain;
+  }
   .char-name {
     font-size: 1.1rem;
     letter-spacing: 3px;
@@ -148,8 +149,8 @@
     left: 0; right: 0;
     z-index: 20;
     background: linear-gradient(180deg, rgba(10,10,20,.0) 0%, rgba(10,10,20,.95) 15%, #0d0d1a 100%);
-    padding: 18px 30px 28px;
-    min-height: 160px;
+    padding: 26px 40px 44px;
+    min-height: 260px;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
@@ -179,16 +180,16 @@
     background: var(--card);
     border: 2px solid #333;
     border-radius: 10px;
-    padding: 18px 22px;
-    min-height: 80px;
+    padding: 32px 36px;
+    min-height: 160px;
     position: relative;
   }
   .prosecution-border { border-left: 4px solid var(--red); }
   .defense-border     { border-left: 4px solid var(--blue); }
 
   .dialogue-content {
-    font-size: 1.15rem;
-    line-height: 1.55;
+    font-size: 1.6rem;
+    line-height: 1.7;
     min-height: 1.5em;
   }
 
@@ -611,13 +612,13 @@
   <!-- Characters -->
   <div class="character prosecutor" id="prosecutorChar">
     <div class="char-inner">
-      <div class="avatar">🧑‍⚖️</div>
+      <div class="avatar"><img src="prosecutor.png" alt="Prosecutor"></div>
       <div class="char-name">Prosecutor</div>
     </div>
   </div>
   <div class="character defense" id="defenseChar">
     <div class="char-inner">
-      <div class="avatar">👨‍💼</div>
+      <div class="avatar"><img src="defense.png" alt="Defense"></div>
       <div class="char-name">Defense</div>
     </div>
   </div>
