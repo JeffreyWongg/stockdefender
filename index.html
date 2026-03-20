@@ -129,6 +129,14 @@
     filter: drop-shadow(0 4px 30px rgba(0,0,0,.6));
   }
   .avatar img {
+    width: 100%;
+    height: auto;
+    display: block;
+    filter: drop-shadow(0 6px 24px rgba(0,0,0,.55));
+    user-select: none;
+    pointer-events: none;
+  }
+  .avatar img {
     width: 450px;
     height: auto;
     display: block;
@@ -624,13 +632,13 @@
   <!-- Characters -->
   <div class="character prosecutor" id="prosecutorChar">
     <div class="char-inner">
-      <div class="avatar"><img src="prosecutor.png" alt="Prosecutor"></div>
+      <div class="avatar"><img src="image-removebg-preview%20(3).png" alt="Prosecutor"></div>
       <div class="char-name">Prosecutor</div>
     </div>
   </div>
   <div class="character defense" id="defenseChar">
     <div class="char-inner">
-      <div class="avatar"><img src="defense.png" alt="Defense"></div>
+      <div class="avatar"><img src="image-removebg-preview%20(2).png" alt="Defense"></div>
       <div class="char-name">Defense</div>
     </div>
   </div>
@@ -715,8 +723,8 @@
 <script src="config.js"></script>
 <script>
   // API key loaded from config.js via <script> tag
-  const API_KEY = typeof OPENAI_API_KEY !== 'undefined' ? OPENAI_API_KEY : '';
-  const API_URL = 'https://api.openai.com/v1/chat/completions';
+  const API_KEY = typeof GEMINI_API_KEY !== 'undefined' ? GEMINI_API_KEY : '';
+  const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
 
   const $ = id => document.getElementById(id);
 
@@ -733,20 +741,17 @@
     return text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
   }
 
-  // ── OpenAI fetch ──
+  // ── Gemini fetch ──
   async function askGemini(prompt) {
     let res;
     try {
       res = await fetch(API_URL, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${API_KEY}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          messages: [{ role: 'user', content: prompt }],
-          temperature: 0.9
+          contents: [{ parts: [{ text: prompt }] }]
         })
       });
     } catch (e) {
@@ -754,11 +759,20 @@
     }
     if (!res.ok) {
       let reason = `API error ${res.status}`;
-      try { const d = await res.json(); if (d?.error?.message) reason = `${res.status}: ${d.error.message}`; } catch {}
+      try {
+        const raw = await res.text();
+        try {
+          const d = JSON.parse(raw);
+          if (d?.error?.message) reason = `${res.status}: ${d.error.message}`;
+          else reason = `${res.status}: ${raw.slice(0, 500)}`;
+        } catch {
+          reason = `${res.status}: ${raw.slice(0, 500)}`;
+        }
+      } catch {}
       throw new Error(reason);
     }
     const data = await res.json();
-    return data.choices?.[0]?.message?.content || '';
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
   }
 
   // ── Safe JSON parse ──
@@ -961,8 +975,10 @@
     const defensePrompt = `You are a passionate defense attorney fighting for the investment case of ${ticker}. Argue why this is a GREAT investment. Cover: growth runway, competitive moat, catalysts, financials, market position. Be enthusiastic and compelling. Return exactly 4 short punchy argument points as a JSON array of strings. In each string, use **double asterisks** around 2-3 of the most critical key words or phrases. No markdown fences, just raw JSON array.`;
 
     try {
-      const prosecutorRaw = await askGemini(prosecutorPrompt);
-      const defenseRaw    = await askGemini(defensePrompt);
+      const [prosecutorRaw, defenseRaw] = await Promise.all([
+        askGemini(prosecutorPrompt),
+        askGemini(defensePrompt)
+      ]);
 
       let pArgs, dArgs;
       try { pArgs = safeParse(prosecutorRaw); } catch { pArgs = [prosecutorRaw]; }
